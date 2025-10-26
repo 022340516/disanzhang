@@ -1,0 +1,14 @@
+# GitHub Pages 配置
+title: "第3章 数据可视化网站"
+description: "基于matplotlib的数据可视化技术展示网站"
+baseurl: "/disanzhang"
+url: "https://022340516.github.io"
+
+# 主题设置
+theme: jekyll-theme-cayman
+
+# 构建排除文件
+exclude:
+  - .github/
+  - README.md
+  - _config.yml

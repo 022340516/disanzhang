@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2019年内地电影票房排行榜 - 第3章数据可视化</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .back-btn {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            margin-top: 10px;
+            transition: background 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #2980b9;
+        }
+        
+        .chart-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+        
+        .chart-title {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+        
+        .chart-description {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 500px;
+            margin: 20px 0;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .control-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            font-size: 1em;
+        }
+        
+        .control-btn:hover {
+            background: #2980b9;
+        }
+        
+        .control-btn.active {
+            background: #e74c3c;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .data-table th {
+            background: #3498db;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .data-table tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .ranking {
+            font-weight: bold;
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>2019年内地电影票房排行榜</h1>
+            <p>使用条形图展示电影票房数据</p>
+            <a href="index.html" class="back-btn">返回首页</a>
+        </div>
+        
+        <div class="chart-container">
+            <h2 class="chart-title">2019年内地电影票房排行榜</h2>
+            <div class="chart-description">
+                <p>本图表展示了2019年内地电影票房前十名的数据，包含票房数据和电影名称。</p>
+                <p>通过下方的控制按钮，您可以切换不同的图表类型和显示效果。</p>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn active" onclick="updateChart('bar')">条形图</button>
+                <button class="control-btn" onclick="updateChart('horizontal')">水平条形图</button>
+                <button class="control-btn" onclick="updateChart('sorted')">排序显示</button>
+                <button class="control-btn" onclick="updateChart('value')">显示数值</button>
+            </div>
+            
+            <div class="chart-wrapper">
+                <canvas id="movieChart"></canvas>
+            </div>
+            
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>排名</th>
+                        <th>电影名称</th>
+                        <th>票房（亿元）</th>
+                        <th>类型</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="ranking">1</td>
+                        <td>哪吒之魔童降世</td>
+                        <td>50.13</td>
+                        <td>动画</td>
+                    </tr>
+                    <tr>
+                        <td class="ranking">2</td>
+                        <td>流浪地球</td>
+                        <td>46.86</td>
+                        <td>科幻</td>
+                    </tr>
+                    <tr>
+                        <td class="ranking">3</td>
+                        <td>复仇者联盟4：终局之战</td>
+                        <td>42.50</td>
+                        <td>科幻</td>
+                    </tr>
+                    <tr>
+                        <td class="ranking">4</td>
+                        <td>我和我的祖国</td>
+                        <td>31.71</td>
+                        <td>剧情</td>
+                    </tr>
+                    <tr>
+                        <td class="ranking">5</td>
+                        <td>中国机长</td>
+                        <td>29.12</td>
+                        <td>剧情</td>
+                    </tr>
+                    <tr>
+                        <td class="ranking">6</td>
+                        <td>疯狂的外星人</td>
+                        <td>22.13</td>
+                        <td>喜剧</td>
+                    </tr>
+                    <tr>
+                        <td class="ranking">7</td>
+                        <td>飞驰人生</td>
+                        <td>17.28</td>
+                        <td>喜剧</td>
+                    </tr>
+                    <tr>
+                        <td class="ranking">8</td>
+                        <td>烈火英雄</td>
+                        <td>17.06</td>
+                        <td>灾难</td>
+                    </tr>
+                    <tr>
+                        <td class="ranking">9</td>
+                        <td>少年的你</td>
+                        <td>15.58</td>
+                        <td>剧情</td>
+                    </tr>
+                    <tr>
+                        <td class="ranking">10</td>
+                        <td>速度与激情：特别行动</td>
+                        <td>14.34</td>
+                        <td>动作</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let movieChart;
+        
+        // 电影数据
+        const movieData = {
+            labels: [
+                '哪吒之魔童降世',
+                '流浪地球', 
+                '复仇者联盟4：终局之战',
+                '我和我的祖国',
+                '中国机长',
+                '疯狂的外星人',
+                '飞驰人生',
+                '烈火英雄',
+                '少年的你',
+                '速度与激情：特别行动'
+            ],
+            boxOffice: [50.13, 46.86, 42.50, 31.71, 29.12, 22.13, 17.28, 17.06, 15.58, 14.34],
+            colors: [
+                'rgba(255, 99, 132, 0.8)',
+                'rgba(54, 162, 235, 0.8)',
+                'rgba(255, 206, 86, 0.8)',
+                'rgba(75, 192, 192, 0.8)',
+                'rgba(153, 102, 255, 0.8)',
+                'rgba(255, 159, 64, 0.8)',
+                'rgba(199, 199, 199, 0.8)',
+                'rgba(83, 102, 255, 0.8)',
+                'rgba(40, 159, 64, 0.8)',
+                'rgba(210, 99, 132, 0.8)'
+            ]
+        };
+        
+        // 初始化图表
+        function initChart() {
+            const ctx = document.getElementById('movieChart').getContext('2d');
+            
+            movieChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: movieData.labels,
+                    datasets: [{
+                        label: '票房（亿元）',
+                        data: movieData.boxOffice,
+                        backgroundColor: movieData.colors,
+                        borderColor: movieData.colors.map(color => color.replace('0.8', '1')),
+                        borderWidth: 2
+                    }]
+                },
+                options: getBarOptions()
+            });
+        }
+        
+        // 获取条形图选项
+        function getBarOptions() {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'x',
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '2019年内地电影票房排行榜（亿元）',
+                        font: { size: 18, weight: 'bold' }
+                    },
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `票房：${context.parsed.y} 亿元`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: '票房（亿元）',
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: '电影名称',
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            };
+        }
+        
+        // 获取水平条形图选项
+        function getHorizontalOptions() {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '2019年内地电影票房排行榜 - 水平条形图',
+                        font: { size: 18, weight: 'bold' }
+                    },
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `票房：${context.parsed.x} 亿元`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: '票房（亿元）',
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: '电影名称',
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            };
+        }
+        
+        // 获取排序显示选项
+        function getSortedOptions() {
+            // 创建排序后的数据
+            const sortedData = [...movieData.boxOffice].sort((a, b) => b - a);
+            const sortedLabels = [...movieData.labels].sort((a, b) => 
+                movieData.boxOffice[movieData.labels.indexOf(b)] - movieData.boxOffice[movieData.labels.indexOf(a)]
+            );
+            
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'x',
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '2019年内地电影票房排行榜 - 降序排列',
+                        font: { size: 18, weight: 'bold' }
+                    },
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `票房：${context.parsed.y} 亿元`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: '票房（亿元）',
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: '电影名称',
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            };
+        }
+        
+        // 获取显示数值选项
+        function getValueOptions() {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'x',
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '2019年内地电影票房排行榜 - 显示数值',
+                        font: { size: 18, weight: 'bold' }
+                    },
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `票房：${context.parsed.y} 亿元`;
+                            }
+                        }
+                    },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        formatter: function(value) {
+                            return value + '亿';
+                        },
+                        font: {
+                            weight: 'bold',
+                            size: 12
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: '票房（亿元）',
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: '电影名称',
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            };
+        }
+        
+        // 更新图表
+        function updateChart(type) {
+            // 更新按钮状态
+            document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // 更新图表数据和选项
+            let options;
+            switch(type) {
+                case 'bar':
+                    options = getBarOptions();
+                    movieChart.config.type = 'bar';
+                    movieChart.config.options.indexAxis = 'x';
+                    movieChart.data.labels = movieData.labels;
+                    movieChart.data.datasets[0].data = movieData.boxOffice;
+                    break;
+                case 'horizontal':
+                    options = getHorizontalOptions();
+                    movieChart.config.type = 'bar';
+                    movieChart.config.options.indexAxis = 'y';
+                    movieChart.data.labels = movieData.labels;
+                    movieChart.data.datasets[0].data = movieData.boxOffice;
+                    break;
+                case 'sorted':
+                    options = getSortedOptions();
+                    movieChart.config.type = 'bar';
+                    movieChart.config.options.indexAxis = 'x';
+                    // 排序数据
+                    const sortedIndices = movieData.boxOffice
+                        .map((value, index) => ({value, index}))
+                        .sort((a, b) => b.value - a.value)
+                        .map(item => item.index);
+                    movieChart.data.labels = sortedIndices.map(i => movieData.labels[i]);
+                    movieChart.data.datasets[0].data = sortedIndices.map(i => movieData.boxOffice[i]);
+                    break;
+                case 'value':
+                    options = getValueOptions();
+                    movieChart.config.type = 'bar';
+                    movieChart.config.options.indexAxis = 'x';
+                    movieChart.data.labels = movieData.labels;
+                    movieChart.data.datasets[0].data = movieData.boxOffice;
+                    break;
+            }
+            
+            movieChart.options = options;
+            movieChart.update();
+        }
+        
+        // 页面加载时初始化图表
+        window.onload = initChart;
+    </script>
+</body>
+</html>

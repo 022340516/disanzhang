@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>正弦曲线和余弦曲线 - 第3章数据可视化</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .back-btn {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            margin-top: 10px;
+            transition: background 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #2980b9;
+        }
+        
+        .chart-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+        
+        .chart-title {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+        
+        .chart-description {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 500px;
+            margin: 20px 0;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .control-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            font-size: 1em;
+        }
+        
+        .control-btn:hover {
+            background: #2980b9;
+        }
+        
+        .control-btn.active {
+            background: #e74c3c;
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .slider-label {
+            min-width: 120px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .slider {
+            flex: 1;
+            height: 5px;
+            background: #ddd;
+            outline: none;
+            border-radius: 5px;
+        }
+        
+        .slider-value {
+            min-width: 40px;
+            text-align: center;
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .math-formula {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+        }
+        
+        .math-formula h4 {
+            margin-bottom: 10px;
+            color: #3498db;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>正弦曲线和余弦曲线</h1>
+            <p>展示三角函数图形，包含标题、图例、网格和参考线</p>
+            <a href="index.html" class="back-btn">返回首页</a>
+        </div>
+        
+        <div class="chart-container">
+            <h2 class="chart-title">正弦曲线和余弦曲线</h2>
+            <div class="chart-description">
+                <p>本图表展示了正弦函数和余弦函数的图形，包含完整的图表元素设置。</p>
+                <p>通过下方的控制按钮和滑块，您可以调整函数的参数和显示效果。</p>
+            </div>
+            
+            <div class="math-formula">
+                <h4>三角函数公式</h4>
+                <p>y = A × sin(ωx + φ) 和 y = A × cos(ωx + φ)</p>
+                <p>其中：A - 振幅，ω - 角频率，φ - 相位</p>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn active" onclick="updateChart('basic')">基础图形</button>
+                <button class="control-btn" onclick="updateChart('grid')">显示网格</button>
+                <button class="control-btn" onclick="updateChart('reference')">参考线</button>
+                <button class="control-btn" onclick="updateChart('animated')">动画效果</button>
+            </div>
+            
+            <div class="slider-container">
+                <span class="slider-label">振幅 (A):</span>
+                <input type="range" class="slider" id="amplitudeSlider" min="0.1" max="2" step="0.1" value="1" oninput="updateAmplitude(this.value)">
+                <span class="slider-value" id="amplitudeValue">1.0</span>
+            </div>
+            
+            <div class="slider-container">
+                <span class="slider-label">频率 (ω):</span>
+                <input type="range" class="slider" id="frequencySlider" min="0.5" max="4" step="0.5" value="1" oninput="updateFrequency(this.value)">
+                <span class="slider-value" id="frequencyValue">1.0</span>
+            </div>
+            
+            <div class="slider-container">
+                <span class="slider-label">相位 (φ):</span>
+                <input type="range" class="slider" id="phaseSlider" min="0" max="6.28" step="0.1" value="0" oninput="updatePhase(this.value)">
+                <span class="slider-value" id="phaseValue">0.0</span>
+            </div>
+            
+            <div class="chart-wrapper">
+                <canvas id="trigChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let trigChart;
+        let animationId;
+        let currentTime = 0;
+        
+        // 函数参数
+        let amplitude = 1.0;
+        let frequency = 1.0;
+        let phase = 0.0;
+        
+        // 生成数据点
+        function generateData() {
+            const dataPoints = 200;
+            const xValues = [];
+            const sinValues = [];
+            const cosValues = [];
+            
+            for (let i = 0; i < dataPoints; i++) {
+                const x = (i / dataPoints) * 4 * Math.PI - 2 * Math.PI;
+                xValues.push(x);
+                
+                const sinY = amplitude * Math.sin(frequency * x + phase);
+                const cosY = amplitude * Math.cos(frequency * x + phase);
+                
+                sinValues.push(sinY);
+                cosValues.push(cosY);
+            }
+            
+            return { xValues, sinValues, cosValues };
+        }
+        
+        // 初始化图表
+        function initChart() {
+            const ctx = document.getElementById('trigChart').getContext('2d');
+            const data = generateData();
+            
+            trigChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.xValues.map(x => x.toFixed(2)),
+                    datasets: [
+                        {
+                            label: `y = ${amplitude} × sin(${frequency}x + ${phase.toFixed(2)})`,
+                            data: data.sinValues,
+                            borderColor: 'rgb(255, 99, 132)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.1,
+                            pointRadius: 0
+                        },
+                        {
+                            label: `y = ${amplitude} × cos(${frequency}x + ${phase.toFixed(2)})`,
+                            data: data.cosValues,
+                            borderColor: 'rgb(54, 162, 235)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.1,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: getBasicOptions()
+            });
+        }
+        
+        // 获取基础选项
+        function getBasicOptions() {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '正弦曲线和余弦曲线',
+                        font: { size: 18, weight: 'bold' }
+                    },
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            font: { size: 12 }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'y 值',
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        min: -2,
+                        max: 2,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'x 值（弧度）',
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    }
+                },
+                animation: {
+                    duration: 0
+                }
+            };
+        }
+        
+        // 获取网格选项
+        function getGridOptions() {
+            const options = getBasicOptions();
+            options.scales.y.grid.color = 'rgba(0, 0, 0, 0.2)';
+            options.scales.x.grid.color = 'rgba(0, 0, 0, 0.2)';
+            options.scales.y.grid.lineWidth = 1;
+            options.scales.x.grid.lineWidth = 1;
+            return options;
+        }
+        
+        // 获取参考线选项
+        function getReferenceOptions() {
+            const options = getBasicOptions();
+            options.plugins.annotation = {
+                annotations: {
+                    line1: {
+                        type: 'line',
+                        yMin: 0,
+                        yMax: 0,
+                        borderColor: 'rgb(0, 0, 0)',
+                        borderWidth: 2,
+                        borderDash: [5, 5]
+                    },
+                    line2: {
+                        type: 'line',
+                        xMin: 0,
+                        xMax: 0,
+                        borderColor: 'rgb(0, 0, 0)',
+                        borderWidth: 2,
+                        borderDash: [5, 5]
+                    }
+                }
+            };
+            return options;
+        }
+        
+        // 获取动画选项
+        function getAnimatedOptions() {
+            const options = getBasicOptions();
+            options.animation.duration = 500;
+            return options;
+        }
+        
+        // 更新振幅
+        function updateAmplitude(value) {
+            amplitude = parseFloat(value);
+            document.getElementById('amplitudeValue').textContent = amplitude.toFixed(1);
+            updateChartData();
+        }
+        
+        // 更新频率
+        function updateFrequency(value) {
+            frequency = parseFloat(value);
+            document.getElementById('frequencyValue').textContent = frequency.toFixed(1);
+            updateChartData();
+        }
+        
+        // 更新相位
+        function updatePhase(value) {
+            phase = parseFloat(value);
+            document.getElementById('phaseValue').textContent = phase.toFixed(2);
+            updateChartData();
+        }
+        
+        // 更新图表数据
+        function updateChartData() {
+            const data = generateData();
+            
+            trigChart.data.labels = data.xValues.map(x => x.toFixed(2));
+            trigChart.data.datasets[0].data = data.sinValues;
+            trigChart.data.datasets[1].data = data.cosValues;
+            
+            trigChart.data.datasets[0].label = `y = ${amplitude} × sin(${frequency}x + ${phase.toFixed(2)})`;
+            trigChart.data.datasets[1].label = `y = ${amplitude} × cos(${frequency}x + ${phase.toFixed(2)})`;
+            
+            trigChart.update();
+        }
+        
+        // 开始动画
+        function startAnimation() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+            
+            function animate() {
+                currentTime += 0.02;
+                phase = currentTime;
+                document.getElementById('phaseSlider').value = phase;
+                document.getElementById('phaseValue').textContent = phase.toFixed(2);
+                updateChartData();
+                animationId = requestAnimationFrame(animate);
+            }
+            
+            animate();
+        }
+        
+        // 停止动画
+        function stopAnimation() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+        }
+        
+        // 更新图表
+        function updateChart(type) {
+            // 更新按钮状态
+            document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // 停止之前的动画
+            stopAnimation();
+            
+            // 更新图表选项
+            let options;
+            switch(type) {
+                case 'basic':
+                    options = getBasicOptions();
+                    break;
+                case 'grid':
+                    options = getGridOptions();
+                    break;
+                case 'reference':
+                    options = getReferenceOptions();
+                    break;
+                case 'animated':
+                    options = getAnimatedOptions();
+                    startAnimation();
+                    break;
+            }
+            
+            trigChart.options = options;
+            trigChart.update();
+        }
+        
+        // 页面加载时初始化图表
+        window.onload = initChart;
+        
+        // 页面卸载时停止动画
+        window.addEventListener('beforeunload', stopAnimation);
+    </script>
+</body>
+</html>
