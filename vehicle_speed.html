@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汽车速度与制动距离 - 第3章数据可视化</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+        .chart-container {
+            height: 500px;
+            margin-bottom: 30px;
+        }
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .btn {
+            background: linear-gradient(45deg, #74b9ff, #0984e3);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 0 10px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .nav {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .nav a {
+            color: #74b9ff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+        .data-table th {
+            background-color: #f2f2f2;
+        }
+        .speed-input {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .speed-input input {
+            padding: 10px;
+            border: 2px solid #74b9ff;
+            border-radius: 5px;
+            font-size: 1em;
+            width: 200px;
+        }
+        .speed-input button {
+            background: #74b9ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>汽车速度与制动距离</h1>
+            <p>展示汽车速度与制动距离关系的可视化分析</p>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="showScatterChart()">散点图</button>
+            <button class="btn" onclick="showLineChart()">折线图</button>
+            <button class="btn" onclick="showGridChart()">网格显示</button>
+            <button class="btn" onclick="showPredictionChart()">预测分析</button>
+        </div>
+
+        <div class="speed-input">
+            <input type="number" id="speedInput" placeholder="输入速度(km/h)预测制动距离">
+            <button onclick="predictDistance()">预测制动距离</button>
+            <div id="predictionResult"></div>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="speedChart"></canvas>
+        </div>
+
+        <!-- 数据表格 -->
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>速度(km/h)</th>
+                    <th>制动距离(m)</th>
+                    <th>反应距离(m)</th>
+                    <th>制动时间(s)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>10</td><td>0.5</td><td>2.8</td><td>0.3</td></tr>
+                <tr><td>20</td><td>2.0</td><td>5.6</td><td>0.6</td></tr>
+                <tr><td>30</td><td>4.4</td><td>8.3</td><td>0.9</td></tr>
+                <tr><td>40</td><td>7.9</td><td>11.1</td><td>1.2</td></tr>
+                <tr><td>50</td><td>12.3</td><td>13.9</td><td>1.5</td></tr>
+                <tr><td>60</td><td>17.7</td><td>16.7</td><td>1.8</td></tr>
+                <tr><td>70</td><td>24.1</td><td>19.4</td><td>2.1</td></tr>
+                <tr><td>80</td><td>31.5</td><td>22.2</td><td>2.4</td></tr>
+                <tr><td>90</td><td>39.9</td><td>25.0</td><td>2.7</td></tr>
+                <tr><td>100</td><td>49.2</td><td>27.8</td><td>3.0</td></tr>
+            </tbody>
+        </table>
+
+        <div class="nav">
+            <a href="index.html">返回首页</a>
+        </div>
+    </div>
+
+    <script>
+        let speedChart;
+        const speedData = {
+            speeds: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200],
+            distances: [0.5, 2.0, 4.4, 7.9, 12.3, 17.7, 24.1, 31.5, 39.9, 49.2, 59.5, 70.8, 83.1, 96.4, 110.7, 126.0, 142.2, 159.4, 177.6, 196.8]
+        };
+
+        // 基础图表选项
+        function getBasicOptions() {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '汽车速度与制动距离关系',
+                        font: { size: 18 }
+                    },
+                    legend: {
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: '制动距离(m)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: '速度(km/h)'
+                        }
+                    }
+                }
+            };
+        }
+
+        // 显示散点图
+        function showScatterChart() {
+            if (speedChart) speedChart.destroy();
+            
+            const ctx = document.getElementById('speedChart').getContext('2d');
+            speedChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: '制动距离',
+                        data: speedData.speeds.map((speed, index) => ({
+                            x: speed,
+                            y: speedData.distances[index]
+                        })),
+                        backgroundColor: 'rgba(116, 185, 255, 0.8)',
+                        borderColor: 'rgba(116, 185, 255, 1)',
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: getBasicOptions()
+            });
+        }
+
+        // 显示折线图
+        function showLineChart() {
+            if (speedChart) speedChart.destroy();
+            
+            const ctx = document.getElementById('speedChart').getContext('2d');
+            speedChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: speedData.speeds,
+                    datasets: [{
+                        label: '制动距离',
+                        data: speedData.distances,
+                        backgroundColor: 'rgba(116, 185, 255, 0.2)',
+                        borderColor: 'rgba(116, 185, 255, 1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: getBasicOptions()
+            });
+        }
+
+        // 显示网格图表
+        function showGridChart() {
+            if (speedChart) speedChart.destroy();
+            
+            const ctx = document.getElementById('speedChart').getContext('2d');
+            speedChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: '制动距离',
+                        data: speedData.speeds.map((speed, index) => ({
+                            x: speed,
+                            y: speedData.distances[index]
+                        })),
+                        backgroundColor: 'rgba(116, 185, 255, 0.8)',
+                        borderColor: 'rgba(116, 185, 255, 1)',
+                        pointRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '汽车速度与制动距离关系 - 网格显示',
+                            font: { size: 18 }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: '制动距离(m)' },
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)',
+                                lineWidth: 1
+                            }
+                        },
+                        x: {
+                            title: { display: true, text: '速度(km/h)' },
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)',
+                                lineWidth: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 显示预测分析
+        function showPredictionChart() {
+            if (speedChart) speedChart.destroy();
+            
+            // 使用二次函数拟合数据
+            const regressionData = speedData.speeds.map(speed => {
+                // 二次函数拟合: distance = 0.005 * speed^2 + 0.1 * speed
+                const predictedDistance = 0.005 * speed * speed + 0.1 * speed;
+                return { x: speed, y: predictedDistance };
+            });
+            
+            const ctx = document.getElementById('speedChart').getContext('2d');
+            speedChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: '实际数据',
+                        data: speedData.speeds.map((speed, index) => ({
+                            x: speed,
+                            y: speedData.distances[index]
+                        })),
+                        backgroundColor: 'rgba(116, 185, 255, 0.8)',
+                        borderColor: 'rgba(116, 185, 255, 1)',
+                        pointRadius: 6
+                    }, {
+                        label: '预测曲线',
+                        data: regressionData,
+                        type: 'line',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false
+                    }]
+                },
+                options: getBasicOptions()
+            });
+        }
+
+        // 预测制动距离
+        function predictDistance() {
+            const speed = parseInt(document.getElementById('speedInput').value);
+            if (isNaN(speed) || speed < 0) {
+                document.getElementById('predictionResult').innerHTML = 
+                    '<p style="color: red;">请输入有效的速度值</p>';
+                return;
+            }
+            
+            // 使用二次函数预测
+            const predictedDistance = 0.005 * speed * speed + 0.1 * speed;
+            document.getElementById('predictionResult').innerHTML = 
+                `<p style="color: green;">在${speed}km/h速度下，预测制动距离约为 ${predictedDistance.toFixed(1)} 米</p>`;
+        }
+
+        // 默认显示散点图
+        showScatterChart();
+    </script>
+</body>
+</html>

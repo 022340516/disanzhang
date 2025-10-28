@@ -25,6 +25,31 @@
 - 四种参考区域模式：基础参考区域、多区域参考、阈值参考线、交互式参考
 - 使用学生成绩数据展示不同的参考区域应用场景
 
+### 5. 支付宝账单报告 (`alipay_report.html`)
+- 展示支付宝月度消费数据可视化
+- 包含月度消费趋势、消费类别分布
+- 交互式图表展示
+
+### 6. 汽车速度与制动距离 (`vehicle_speed.html`)
+- 展示汽车速度与制动距离的关系图表
+- 散点图展示速度与距离的关联
+- 包含趋势线和数据分析
+
+### 7. 英语平均成绩 (`english_scores.html`)
+- 展示班级英语平均成绩分布图表
+- 柱状图展示不同班级成绩对比
+- 包含平均线和标准差显示
+
+### 8. 阿里巴巴GMV数据 (`alibaba_gmv.html`)
+- 展示阿里巴巴GMV增长趋势图表
+- 折线图展示年度GMV变化
+- 包含增长率和趋势分析
+
+### 9. 果酱面包配料比例 (`jam_bread.html`)
+- 展示果酱面包配料比例饼图
+- 环形饼图展示各配料占比
+- 包含详细配料说明
+
 ## 技术特点
 
 - **响应式设计**：适配不同屏幕尺寸
@@ -44,12 +69,18 @@
 
 ```
 数据可视化网站/
-├── index.html          # 网站首页
-├── basic_chart.html     # 基础图表设置
-├── movie_ranking.html   # 电影票房排行榜
-├── sine_cosine.html     # 正弦余弦曲线
-├── reference_area.html  # 参考区域展示
-└── README.md           # 说明文档
+├── index.html              # 网站首页
+├── basic_chart.html         # 基础图表设置
+├── movie_ranking.html      # 电影票房排行榜
+├── sine_cosine.html        # 正弦余弦曲线
+├── reference_area.html     # 参考区域展示
+├── alipay_report.html      # 支付宝账单报告
+├── vehicle_speed.html      # 汽车速度与制动距离
+├── english_scores.html     # 英语平均成绩
+├── alibaba_gmv.html        # 阿里巴巴GMV数据
+├── jam_bread.html          # 果酱面包配料比例
+├── README.md               # 说明文档
+└── .github/workflows/deploy.yml  # GitHub Pages部署配置
 ```
 
 ## 技术栈

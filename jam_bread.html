@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>果酱面包配料比例 - 第3章数据可视化</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+        .chart-container {
+            height: 500px;
+            margin-bottom: 30px;
+        }
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .btn {
+            background: linear-gradient(45deg, #ffd89b, #19547b);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 0 10px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .nav {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .nav a {
+            color: #ffd89b;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+        .data-table th {
+            background-color: #f2f2f2;
+        }
+        .recipe-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .ingredient-input {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .ingredient-input input {
+            padding: 10px;
+            border: 2px solid #ffd89b;
+            border-radius: 5px;
+            font-size: 1em;
+            width: 200px;
+            margin: 0 10px;
+        }
+        .ingredient-input button {
+            background: #ffd89b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>果酱面包配料比例</h1>
+            <p>展示果酱面包各种配料比例的可视化分析</p>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="showPieChart()">饼图</button>
+            <button class="btn" onclick="showDonutChart()">环形图</button>
+            <button class="btn" onclick="showBarChart()">柱状图</button>
+            <button class="btn" onclick="showStackedChart()">堆叠图</button>
+        </div>
+
+        <div class="recipe-info">
+            <h3>配方信息</h3>
+            <p>总重量: <strong>1000克</strong></p>
+            <p>制作数量: <strong>10个果酱面包</strong></p>
+            <p>每个面包重量: <strong>100克</strong></p>
+        </div>
+
+        <div class="ingredient-input">
+            <input type="number" id="flourInput" placeholder="面粉重量(克)" value="500">
+            <input type="number" id="waterInput" placeholder="水重量(克)" value="250">
+            <input type="number" id="jamInput" placeholder="果酱重量(克)" value="150">
+            <button onclick="updateRecipe()">更新配方</button>
+            <div id="recipeResult"></div>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="ingredientChart"></canvas>
+        </div>
+
+        <!-- 数据表格 -->
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>配料名称</th>
+                    <th>重量(克)</th>
+                    <th>比例(%)</th>
+                    <th>每个面包含量(克)</th>
+                    <th>功能说明</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>面粉</td><td>500</td><td>50.0%</td><td>50</td><td>主要原料，提供结构</td></tr>
+                <tr><td>水</td><td>250</td><td>25.0%</td><td>25</td><td>溶解酵母，形成面筋</td></tr>
+                <tr><td>果酱</td><td>150</td><td>15.0%</td><td>15</td><td>提供风味和甜度</td></tr>
+                <tr><td>酵母</td><td>10</td><td>1.0%</td><td>1</td><td>发酵剂，使面包膨胀</td></tr>
+                <tr><td>糖</td><td>50</td><td>5.0%</td><td>5</td><td>提供甜度，促进发酵</td></tr>
+                <tr><td>盐</td><td>5</td><td>0.5%</td><td>0.5</td><td>调味，增强面筋</td></tr>
+                <tr><td>黄油</td><td>35</td><td>3.5%</td><td>3.5</td><td>增加柔软度和风味</td></tr>
+            </tbody>
+        </table>
+
+        <div class="nav">
+            <a href="index.html">返回首页</a>
+        </div>
+    </div>
+
+    <script>
+        let ingredientChart;
+        const ingredientData = {
+            labels: ['面粉', '水', '果酱', '酵母', '糖', '盐', '黄油'],
+            weights: [500, 250, 150, 10, 50, 5, 35],
+            percentages: [50.0, 25.0, 15.0, 1.0, 5.0, 0.5, 3.5],
+            perBread: [50, 25, 15, 1, 5, 0.5, 3.5],
+            descriptions: [
+                '主要原料，提供结构',
+                '溶解酵母，形成面筋', 
+                '提供风味和甜度',
+                '发酵剂，使面包膨胀',
+                '提供甜度，促进发酵',
+                '调味，增强面筋',
+                '增加柔软度和风味'
+            ],
+            colors: [
+                'rgba(255, 99, 132, 0.8)',
+                'rgba(54, 162, 235, 0.8)',
+                'rgba(255, 206, 86, 0.8)',
+                'rgba(75, 192, 192, 0.8)',
+                'rgba(153, 102, 255, 0.8)',
+                'rgba(255, 159, 64, 0.8)',
+                'rgba(199, 199, 199, 0.8)'
+            ]
+        };
+
+        // 基础图表选项
+        function getBasicOptions() {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        font: { size: 18 }
+                    },
+                    legend: {
+                        position: 'top'
+                    }
+                }
+            };
+        }
+
+        // 显示饼图
+        function showPieChart() {
+            if (ingredientChart) ingredientChart.destroy();
+            
+            const ctx = document.getElementById('ingredientChart').getContext('2d');
+            ingredientChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ingredientData.labels,
+                    datasets: [{
+                        data: ingredientData.weights,
+                        backgroundColor: ingredientData.colors,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    ...getBasicOptions(),
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '果酱面包配料比例 - 饼图',
+                            font: { size: 18 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const percentage = ingredientData.percentages[context.dataIndex];
+                                    return `${label}: ${value}g (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 显示环形图
+        function showDonutChart() {
+            if (ingredientChart) ingredientChart.destroy();
+            
+            const ctx = document.getElementById('ingredientChart').getContext('2d');
+            ingredientChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ingredientData.labels,
+                    datasets: [{
+                        data: ingredientData.weights,
+                        backgroundColor: ingredientData.colors,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    ...getBasicOptions(),
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '果酱面包配料比例 - 环形图',
+                            font: { size: 18 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const percentage = ingredientData.percentages[context.dataIndex];
+                                    return `${label}: ${value}g (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 显示柱状图
+        function showBarChart() {
+            if (ingredientChart) ingredientChart.destroy();
+            
+            const ctx = document.getElementById('ingredientChart').getContext('2d');
+            ingredientChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ingredientData.labels,
+                    datasets: [{
+                        label: '重量(克)',
+                        data: ingredientData.weights,
+                        backgroundColor: ingredientData.colors,
+                        borderColor: ingredientData.colors.map(color => color.replace('0.8', '1')),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    ...getBasicOptions(),
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '果酱面包配料重量分布',
+                            font: { size: 18 }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '重量(克)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: '配料名称'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 显示堆叠图
+        function showStackedChart() {
+            if (ingredientChart) ingredientChart.destroy();
+            
+            const ctx = document.getElementById('ingredientChart').getContext('2d');
+            ingredientChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['每个面包含量'],
+                    datasets: ingredientData.labels.map((label, index) => ({
+                        label: label,
+                        data: [ingredientData.perBread[index]],
+                        backgroundColor: ingredientData.colors[index],
+                        borderColor: ingredientData.colors[index].replace('0.8', '1'),
+                        borderWidth: 2
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '每个果酱面包的配料含量',
+                            font: { size: 18 }
+                        },
+                        legend: {
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            stacked: true,
+                            title: {
+                                display: true,
+                                text: '重量(克)'
+                            }
+                        },
+                        x: {
+                            stacked: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // 更新配方
+        function updateRecipe() {
+            const flour = parseInt(document.getElementById('flourInput').value) || 500;
+            const water = parseInt(document.getElementById('waterInput').value) || 250;
+            const jam = parseInt(document.getElementById('jamInput').value) || 150;
+            
+            // 保持其他配料比例不变
+            const total = flour + water + jam + 10 + 50 + 5 + 35;
+            
+            ingredientData.weights = [flour, water, jam, 10, 50, 5, 35];
+            ingredientData.percentages = ingredientData.weights.map(weight => 
+                ((weight / total) * 100).toFixed(1)
+            );
+            ingredientData.perBread = ingredientData.weights.map(weight => 
+                (weight / 10).toFixed(1)
+            );
+            
+            document.getElementById('recipeResult').innerHTML = 
+                `<p style="color: green;">配方已更新！总重量: ${total}克，每个面包: ${(total/10).toFixed(1)}克</p>`;
+            
+            // 重新显示当前图表
+            if (ingredientChart) {
+                const currentType = ingredientChart.config.type;
+                if (currentType === 'pie') showPieChart();
+                else if (currentType === 'doughnut') showDonutChart();
+                else if (currentType === 'bar') showBarChart();
+                else if (currentType === 'bar') showStackedChart();
+            }
+        }
+
+        // 默认显示饼图
+        showPieChart();
+    </script>
+</body>
+</html>

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英语平均成绩 - 第3章数据可视化</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #fd79a8 0%, #e84393 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+        .chart-container {
+            height: 500px;
+            margin-bottom: 30px;
+        }
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .btn {
+            background: linear-gradient(45deg, #fd79a8, #e84393);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 0 10px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .nav {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .nav a {
+            color: #fd79a8;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+        .data-table th {
+            background-color: #f2f2f2;
+        }
+        .reference-line {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>英语平均成绩分析</h1>
+            <p>展示高二各班男生、女生英语平均成绩的可视化分析</p>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="showBarChart()">柱状图</button>
+            <button class="btn" onclick="showLineChart()">折线图</button>
+            <button class="btn" onclick="showComparisonChart()">对比分析</button>
+            <button class="btn" onclick="showTrendChart()">趋势分析</button>
+        </div>
+
+        <div class="reference-line">
+            <h3>参考线信息</h3>
+            <p>全体平均成绩: <strong>88.5分</strong></p>
+            <p>男生平均成绩: <strong>85.2分</strong></p>
+            <p>女生平均成绩: <strong>91.8分</strong></p>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="scoreChart"></canvas>
+        </div>
+
+        <!-- 数据表格 -->
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>班级</th>
+                    <th>男生平均成绩</th>
+                    <th>女生平均成绩</th>
+                    <th>班级平均成绩</th>
+                    <th>与全体平均分差</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>高二1班</td><td>82</td><td>90</td><td>86.0</td><td>-2.5</td></tr>
+                <tr><td>高二2班</td><td>85</td><td>92</td><td>88.5</td><td>0.0</td></tr>
+                <tr><td>高二3班</td><td>88</td><td>95</td><td>91.5</td><td>+3.0</td></tr>
+                <tr><td>高二4班</td><td>83</td><td>89</td><td>86.0</td><td>-2.5</td></tr>
+                <tr><td>高二5班</td><td>87</td><td>93</td><td>90.0</td><td>+1.5</td></tr>
+                <tr><td>高二6班</td><td>86</td><td>92</td><td>89.0</td><td>+0.5</td></tr>
+            </tbody>
+        </table>
+
+        <div class="nav">
+            <a href="index.html">返回首页</a>
+        </div>
+    </div>
+
+    <script>
+        let scoreChart;
+        const scoreData = {
+            labels: ['高二1班', '高二2班', '高二3班', '高二4班', '高二5班', '高二6班'],
+            boysScores: [82, 85, 88, 83, 87, 86],
+            girlsScores: [90, 92, 95, 89, 93, 92],
+            classAverages: [86.0, 88.5, 91.5, 86.0, 90.0, 89.0],
+            overallAverage: 88.5
+        };
+
+        // 基础图表选项
+        function getBasicOptions() {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        font: { size: 18 }
+                    },
+                    legend: {
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 80,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: '分数'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: '班级'
+                        }
+                    }
+                }
+            };
+        }
+
+        // 显示柱状图
+        function showBarChart() {
+            if (scoreChart) scoreChart.destroy();
+            
+            const ctx = document.getElementById('scoreChart').getContext('2d');
+            scoreChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: scoreData.labels,
+                    datasets: [{
+                        label: '男生平均成绩',
+                        data: scoreData.boysScores,
+                        backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 2
+                    }, {
+                        label: '女生平均成绩',
+                        data: scoreData.girlsScores,
+                        backgroundColor: 'rgba(255, 99, 132, 0.8)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 2
+                    }, {
+                        label: '全体平均成绩',
+                        data: Array(6).fill(scoreData.overallAverage),
+                        type: 'line',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        pointRadius: 0,
+                        fill: false
+                    }]
+                },
+                options: {
+                    ...getBasicOptions(),
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '高二各班男生、女生英语平均成绩',
+                            font: { size: 18 }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 显示折线图
+        function showLineChart() {
+            if (scoreChart) scoreChart.destroy();
+            
+            const ctx = document.getElementById('scoreChart').getContext('2d');
+            scoreChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: scoreData.labels,
+                    datasets: [{
+                        label: '男生平均成绩',
+                        data: scoreData.boysScores,
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderWidth: 3,
+                        tension: 0.1
+                    }, {
+                        label: '女生平均成绩',
+                        data: scoreData.girlsScores,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderWidth: 3,
+                        tension: 0.1
+                    }, {
+                        label: '班级平均成绩',
+                        data: scoreData.classAverages,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderWidth: 3,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    ...getBasicOptions(),
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '英语成绩趋势分析',
+                            font: { size: 18 }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 显示对比分析
+        function showComparisonChart() {
+            if (scoreChart) scoreChart.destroy();
+            
+            const ctx = document.getElementById('scoreChart').getContext('2d');
+            scoreChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: scoreData.labels,
+                    datasets: [{
+                        label: '男生成绩',
+                        data: scoreData.boysScores,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 2
+                    }, {
+                        label: '女生成绩',
+                        data: scoreData.girlsScores,
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '男女生成绩对比分析',
+                            font: { size: 18 }
+                        }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: { display: true },
+                            suggestedMin: 80,
+                            suggestedMax: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        // 显示趋势分析
+        function showTrendChart() {
+            if (scoreChart) scoreChart.destroy();
+            
+            const ctx = document.getElementById('scoreChart').getContext('2d');
+            scoreChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: '班级平均成绩',
+                        data: scoreData.labels.map((label, index) => ({
+                            x: index + 1,
+                            y: scoreData.classAverages[index]
+                        })),
+                        backgroundColor: 'rgba(153, 102, 255, 0.8)',
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        pointRadius: 8
+                    }, {
+                        label: '趋势线',
+                        data: scoreData.labels.map((label, index) => ({
+                            x: index + 1,
+                            y: 85 + index * 1
+                        })),
+                        type: 'line',
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '班级成绩分布趋势',
+                            font: { size: 18 }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 80,
+                            max: 100,
+                            title: { display: true, text: '平均成绩' }
+                        },
+                        x: {
+                            title: { display: true, text: '班级编号' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 默认显示柱状图
+        showBarChart();
+    </script>
+</body>
+</html>

@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高级图表展示 - 第3章数据可视化</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .nav-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .nav-btn.active {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chart-title {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+            margin: 0 auto;
+        }
+        
+        .back-btn {
+            display: block;
+            width: 200px;
+            margin: 30px auto 0;
+            padding: 12px 25px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            text-decoration: none;
+            text-align: center;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .description {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .description h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .description p {
+            color: #666;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>高级图表展示</h1>
+            <p>第3章 - 注释文本、参考线和表格</p>
+        </div>
+        
+        <div class="nav-buttons">
+            <button class="nav-btn active" onclick="showChart('annotations')">注释文本</button>
+            <button class="nav-btn" onclick="showChart('reference')">参考线</button>
+            <button class="nav-btn" onclick="showChart('table')">数据表格</button>
+            <button class="nav-btn" onclick="showChart('advanced')">综合展示</button>
+        </div>
+        
+        <!-- 注释文本图表 -->
+        <div id="annotations" class="chart-container">
+            <h2 class="chart-title">注释文本展示 - 正弦余弦曲线</h2>
+            <div class="chart-wrapper">
+                <canvas id="annotationsChart"></canvas>
+            </div>
+            <div class="description">
+                <h3>注释文本功能</h3>
+                <p>展示如何在图表中添加指向型注释文本和无指向型注释文本，增强图表的可读性和信息传达效果。</p>
+            </div>
+        </div>
+        
+        <!-- 参考线图表 -->
+        <div id="reference" class="chart-container" style="display: none;">
+            <h2 class="chart-title">参考线和参考区域</h2>
+            <div class="chart-wrapper">
+                <canvas id="referenceChart"></canvas>
+            </div>
+            <div class="description">
+                <h3>参考线功能</h3>
+                <p>展示如何在图表中添加垂直和水平参考线，以及参考区域，帮助用户更好地理解数据分布和关键值。</p>
+            </div>
+        </div>
+        
+        <!-- 数据表格 -->
+        <div id="table" class="chart-container" style="display: none;">
+            <h2 class="chart-title">阿里巴巴GMV数据表格</h2>
+            <div class="chart-wrapper">
+                <canvas id="tableChart"></canvas>
+            </div>
+            <div class="description">
+                <h3>数据表格展示</h3>
+                <p>展示如何将数据表格与图表结合，提供更详细的数据信息，增强数据分析的全面性。</p>
+            </div>
+        </div>
+        
+        <!-- 综合展示 -->
+        <div id="advanced" class="chart-container" style="display: none;">
+            <h2 class="chart-title">综合展示 - 完整图表</h2>
+            <div class="chart-wrapper">
+                <canvas id="advancedChart"></canvas>
+            </div>
+            <div class="description">
+                <h3>综合功能展示</h3>
+                <p>综合展示注释文本、参考线、数据表格等多种高级功能，创建专业级别的数据可视化图表。</p>
+            </div>
+        </div>
+        
+        <a href="index.html" class="back-btn">返回首页</a>
+    </div>
+
+    <script>
+        // 显示指定图表，隐藏其他
+        function showChart(chartType) {
+            // 隐藏所有图表容器
+            document.querySelectorAll('.chart-container').forEach(container => {
+                container.style.display = 'none';
+            });
+            
+            // 移除所有按钮的active类
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // 显示指定图表
+            document.getElementById(chartType).style.display = 'block';
+            
+            // 为当前按钮添加active类
+            event.target.classList.add('active');
+            
+            // 初始化图表
+            initializeChart(chartType);
+        }
+        
+        // 初始化图表
+        function initializeChart(chartType) {
+            switch(chartType) {
+                case 'annotations':
+                    createAnnotationsChart();
+                    break;
+                case 'reference':
+                    createReferenceChart();
+                    break;
+                case 'table':
+                    createTableChart();
+                    break;
+                case 'advanced':
+                    createAdvancedChart();
+                    break;
+            }
+        }
+        
+        // 注释文本图表
+        function createAnnotationsChart() {
+            const ctx = document.getElementById('annotationsChart').getContext('2d');
+            
+            // 生成正弦余弦数据
+            const labels = [];
+            const sinData = [];
+            const cosData = [];
+            
+            for (let i = -Math.PI; i <= Math.PI; i += 0.1) {
+                labels.push(i.toFixed(1));
+                sinData.push(Math.sin(i));
+                cosData.push(Math.cos(i));
+            }
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '正弦曲线',
+                            data: sinData,
+                            borderColor: 'rgb(255, 99, 132)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: '余弦曲线',
+                            data: cosData,
+                            borderColor: 'rgb(54, 162, 235)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '正弦曲线和余弦曲线',
+                            font: { size: 16 }
+                        },
+                        annotation: {
+                            annotations: {
+                                minPoint: {
+                                    type: 'point',
+                                    xValue: -1.57, // -π/2
+                                    yValue: -1,
+                                    backgroundColor: 'rgba(255, 99, 132, 1)',
+                                    radius: 6,
+                                    label: {
+                                        display: true,
+                                        content: '最小值',
+                                        position: 'top'
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'x轴'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'y轴'
+                            },
+                            min: -1.5,
+                            max: 1.5
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 参考线图表
+        function createReferenceChart() {
+            const ctx = document.getElementById('referenceChart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+                    datasets: [{
+                        label: '销售额',
+                        data: [65, 59, 80, 81, 56, 55],
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        annotation: {
+                            annotations: {
+                                line1: {
+                                    type: 'line',
+                                    yMin: 70,
+                                    yMax: 70,
+                                    borderColor: 'rgb(255, 99, 132)',
+                                    borderWidth: 2,
+                                    borderDash: [5, 5],
+                                    label: {
+                                        display: true,
+                                        content: '目标线',
+                                        position: 'end'
+                                    }
+                                },
+                                box1: {
+                                    type: 'box',
+                                    xMin: 1.5,
+                                    xMax: 3.5,
+                                    yMin: 50,
+                                    yMax: 90,
+                                    backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                                    borderColor: 'rgba(255, 99, 132, 0.8)',
+                                    borderWidth: 1,
+                                    label: {
+                                        display: true,
+                                        content: '参考区域',
+                                        position: 'center'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 数据表格图表
+        function createTableChart() {
+            const ctx = document.getElementById('tableChart').getContext('2d');
+            
+            const years = ['FY2013', 'FY2014', 'FY2015', 'FY2016', 'FY2017', 'FY2018', 'FY2019'];
+            const gmv = [10770, 16780, 24440, 30920, 37670, 48200, 57270];
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: years,
+                    datasets: [{
+                        label: 'GMV(亿元)',
+                        data: gmv,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.8)',
+                            'rgba(54, 162, 235, 0.8)',
+                            'rgba(255, 206, 86, 0.8)',
+                            'rgba(75, 192, 192, 0.8)',
+                            'rgba(153, 102, 255, 0.8)',
+                            'rgba(255, 159, 64, 0.8)',
+                            'rgba(199, 199, 199, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgb(255, 99, 132)',
+                            'rgb(54, 162, 235)',
+                            'rgb(255, 206, 86)',
+                            'rgb(75, 192, 192)',
+                            'rgb(153, 102, 255)',
+                            'rgb(255, 159, 64)',
+                            'rgb(199, 199, 199)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `GMV: ${context.parsed.y} 亿元`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'GMV(亿元)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 综合展示图表
+        function createAdvancedChart() {
+            const ctx = document.getElementById('advancedChart').getContext('2d');
+            
+            const labels = [];
+            const data1 = [];
+            const data2 = [];
+            
+            for (let i = 0; i <= 10; i++) {
+                labels.push(`点${i}`);
+                data1.push(Math.random() * 100);
+                data2.push(Math.random() * 100);
+            }
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '数据集1',
+                            data: data1,
+                            borderColor: 'rgb(255, 99, 132)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                            fill: true
+                        },
+                        {
+                            label: '数据集2',
+                            data: data2,
+                            borderColor: 'rgb(54, 162, 235)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '综合展示图表',
+                            font: { size: 18 }
+                        },
+                        legend: {
+                            position: 'top',
+                        },
+                        annotation: {
+                            annotations: {
+                                avgLine: {
+                                    type: 'line',
+                                    yMin: 50,
+                                    yMax: 50,
+                                    borderColor: 'rgb(75, 192, 192)',
+                                    borderWidth: 2,
+                                    borderDash: [5, 5],
+                                    label: {
+                                        display: true,
+                                        content: '平均值',
+                                        position: 'end'
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 页面加载时初始化第一个图表
+        window.onload = function() {
+            createAnnotationsChart();
+        };
+    </script>
+</body>
+</html>

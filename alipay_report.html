@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>支付宝账单报告 - 第3章数据可视化</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+        .chart-container {
+            height: 400px;
+            margin-bottom: 30px;
+        }
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 0 10px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .nav {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .nav a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+        .data-table th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>支付宝账单报告</h1>
+            <p>展示支付宝账单数据的可视化分析</p>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="showBasicChart()">基础图表</button>
+            <button class="btn" onclick="showCategoryChart()">分类统计</button>
+            <button class="btn" onclick="showTrendChart()">趋势分析</button>
+            <button class="btn" onclick="showComparisonChart()">对比分析</button>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="alipayChart"></canvas>
+        </div>
+
+        <!-- 数据表格 -->
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>月份</th>
+                    <th>餐饮消费</th>
+                    <th>购物消费</th>
+                    <th>交通出行</th>
+                    <th>娱乐消费</th>
+                    <th>其他消费</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>1月</td><td>1200</td><td>800</td><td>300</td><td>200</td><td>150</td></tr>
+                <tr><td>2月</td><td>1500</td><td>600</td><td>250</td><td>180</td><td>120</td></tr>
+                <tr><td>3月</td><td>1100</td><td>900</td><td>280</td><td>220</td><td>160</td></tr>
+                <tr><td>4月</td><td>1300</td><td>750</td><td>320</td><td>190</td><td>140</td></tr>
+                <tr><td>5月</td><td>1400</td><td>850</td><td>290</td><td>210</td><td>130</td></tr>
+                <tr><td>6月</td><td>1250</td><td>700</td><td>310</td><td>230</td><td>170</td></tr>
+            </tbody>
+        </table>
+
+        <div class="nav">
+            <a href="index.html">返回首页</a>
+        </div>
+    </div>
+
+    <script>
+        let alipayChart;
+        const alipayData = {
+            labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+            datasets: [{
+                label: '餐饮消费',
+                data: [1200, 1500, 1100, 1300, 1400, 1250],
+                backgroundColor: 'rgba(255, 99, 132, 0.8)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 2
+            }, {
+                label: '购物消费',
+                data: [800, 600, 900, 750, 850, 700],
+                backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 2
+            }, {
+                label: '交通出行',
+                data: [300, 250, 280, 320, 290, 310],
+                backgroundColor: 'rgba(75, 192, 192, 0.8)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2
+            }, {
+                label: '娱乐消费',
+                data: [200, 180, 220, 190, 210, 230],
+                backgroundColor: 'rgba(153, 102, 255, 0.8)',
+                borderColor: 'rgba(153, 102, 255, 1)',
+                borderWidth: 2
+            }, {
+                label: '其他消费',
+                data: [150, 120, 160, 140, 130, 170],
+                backgroundColor: 'rgba(255, 159, 64, 0.8)',
+                borderColor: 'rgba(255, 159, 64, 1)',
+                borderWidth: 2
+            }]
+        };
+
+        // 基础图表选项
+        function getBasicOptions() {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '支付宝月度消费统计',
+                        font: { size: 18 }
+                    },
+                    legend: {
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: '消费金额(元)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: '月份'
+                        }
+                    }
+                }
+            };
+        }
+
+        // 显示基础图表
+        function showBasicChart() {
+            if (alipayChart) alipayChart.destroy();
+            
+            const ctx = document.getElementById('alipayChart').getContext('2d');
+            alipayChart = new Chart(ctx, {
+                type: 'bar',
+                data: alipayData,
+                options: getBasicOptions()
+            });
+        }
+
+        // 显示分类统计
+        function showCategoryChart() {
+            if (alipayChart) alipayChart.destroy();
+            
+            const ctx = document.getElementById('alipayChart').getContext('2d');
+            alipayChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: alipayData.datasets.map(ds => ds.label),
+                    datasets: [{
+                        data: alipayData.datasets.map(ds => ds.data.reduce((a, b) => a + b, 0)),
+                        backgroundColor: alipayData.datasets.map(ds => ds.backgroundColor)
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '支付宝消费分类统计',
+                            font: { size: 18 }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 显示趋势分析
+        function showTrendChart() {
+            if (alipayChart) alipayChart.destroy();
+            
+            const ctx = document.getElementById('alipayChart').getContext('2d');
+            alipayChart = new Chart(ctx, {
+                type: 'line',
+                data: alipayData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '支付宝消费趋势分析',
+                            font: { size: 18 }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: '消费金额(元)' }
+                        },
+                        x: {
+                            title: { display: true, text: '月份' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 显示对比分析
+        function showComparisonChart() {
+            if (alipayChart) alipayChart.destroy();
+            
+            const ctx = document.getElementById('alipayChart').getContext('2d');
+            alipayChart = new Chart(ctx, {
+                type: 'radar',
+                data: alipayData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '支付宝消费对比分析',
+                            font: { size: 18 }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 默认显示基础图表
+        showBasicChart();
+    </script>
+</body>
+</html>

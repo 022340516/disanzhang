@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>饼图展示 - 第3章数据可视化</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .chart-container:hover {
+            transform: translateY(-5px);
+        }
+        
+        .chart-title {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #4a5568;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+            margin-bottom: 20px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .control-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        .control-btn.active {
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .data-table th {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .data-table tr:hover {
+            background: #e9ecef;
+        }
+        
+        .nav-buttons {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .nav-btn {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            padding: 12px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-size: 1.1em;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+        
+        .nav-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        @media (max-width: 768px) {
+            .chart-wrapper {
+                height: 300px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .control-btn {
+                width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>饼图展示</h1>
+            <p>第3章数据可视化 - 饼图应用实例</p>
+        </div>
+        
+        <div class="chart-container">
+            <div class="chart-title">果酱面包配料比例</div>
+            <div class="chart-wrapper">
+                <canvas id="pieChart"></canvas>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn active" onclick="showBasicPie()">基础饼图</button>
+                <button class="control-btn" onclick="showExplodedPie()">分离饼图</button>
+                <button class="control-btn" onclick="showDonutChart()">环形图</button>
+                <button class="control-btn" onclick="show3DPie()">3D饼图</button>
+            </div>
+            
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>配料</th>
+                        <th>重量(g)</th>
+                        <th>比例</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- 数据将通过JavaScript动态填充 -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="nav-buttons">
+            <a href="index.html" class="nav-btn">返回首页</a>
+            <a href="advanced_charts.html" class="nav-btn">高级图表</a>
+        </div>
+    </div>
+
+    <script>
+        // 果酱面包配料数据
+        const ingredientsData = {
+            labels: ['面粉', '全麦粉', '酵母', '苹果酱', '鸡蛋', '黄油', '盐', '白糖'],
+            weights: [250, 150, 4, 250, 50, 30, 4, 20],
+            colors: [
+                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+                '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+            ]
+        };
+
+        // 计算总重量和比例
+        const totalWeight = ingredientsData.weights.reduce((sum, weight) => sum + weight, 0);
+        const percentages = ingredientsData.weights.map(weight => 
+            ((weight / totalWeight) * 100).toFixed(1)
+        );
+
+        // 填充数据表格
+        const tableBody = document.getElementById('tableBody');
+        ingredientsData.labels.forEach((label, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${label}</td>
+                <td>${ingredientsData.weights[index]}g</td>
+                <td>${percentages[index]}%</td>
+            `;
+            tableBody.appendChild(row);
+        });
+
+        let pieChart;
+
+        // 基础饼图
+        function showBasicPie() {
+            if (pieChart) pieChart.destroy();
+            
+            const ctx = document.getElementById('pieChart').getContext('2d');
+            pieChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ingredientsData.labels,
+                    datasets: [{
+                        data: ingredientsData.weights,
+                        backgroundColor: ingredientsData.colors,
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '果酱面包配料比例 - 基础饼图',
+                            font: { size: 16 }
+                        },
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                font: { size: 12 },
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const percentage = ((value / totalWeight) * 100).toFixed(1);
+                                    return `${label}: ${value}g (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            updateActiveButton('基础饼图');
+        }
+
+        // 分离饼图
+        function showExplodedPie() {
+            if (pieChart) pieChart.destroy();
+            
+            const ctx = document.getElementById('pieChart').getContext('2d');
+            pieChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ingredientsData.labels,
+                    datasets: [{
+                        data: ingredientsData.weights,
+                        backgroundColor: ingredientsData.colors,
+                        borderWidth: 2,
+                        borderColor: '#fff',
+                        offset: 15 // 分离效果
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '果酱面包配料比例 - 分离饼图',
+                            font: { size: 16 }
+                        },
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+            
+            updateActiveButton('分离饼图');
+        }
+
+        // 环形图
+        function showDonutChart() {
+            if (pieChart) pieChart.destroy();
+            
+            const ctx = document.getElementById('pieChart').getContext('2d');
+            pieChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ingredientsData.labels,
+                    datasets: [{
+                        data: ingredientsData.weights,
+                        backgroundColor: ingredientsData.colors,
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%', // 环形大小
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '果酱面包配料比例 - 环形图',
+                            font: { size: 16 }
+                        },
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+            
+            updateActiveButton('环形图');
+        }
+
+        // 3D饼图（使用阴影效果模拟）
+        function show3DPie() {
+            if (pieChart) pieChart.destroy();
+            
+            const ctx = document.getElementById('pieChart').getContext('2d');
+            pieChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ingredientsData.labels,
+                    datasets: [{
+                        data: ingredientsData.weights,
+                        backgroundColor: ingredientsData.colors.map(color => 
+                            color.replace('#', '#80') // 添加透明度模拟3D效果
+                        ),
+                        borderWidth: 2,
+                        borderColor: '#fff',
+                        shadowOffsetX: 5,
+                        shadowOffsetY: 5,
+                        shadowBlur: 10,
+                        shadowColor: 'rgba(0,0,0,0.3)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '果酱面包配料比例 - 3D效果饼图',
+                            font: { size: 16 }
+                        },
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+            
+            updateActiveButton('3D饼图');
+        }
+
+        // 更新激活按钮样式
+        function updateActiveButton(buttonText) {
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent === buttonText) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        // 页面加载时显示基础饼图
+        window.onload = function() {
+            showBasicPie();
+        };
+    </script>
+</body>
+</html>
